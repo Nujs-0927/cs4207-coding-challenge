@@ -1,0 +1,33 @@
+<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Group 20 — B poster section</title><style>:root{--ink:#142a36;--teal:#087f78;--muted:#536670;--pale:#eaf4f2;--line:#d5e1e5}
+*{box-sizing:border-box}body{font:16px/1.75 'Segoe UI','Microsoft YaHei',sans-serif;color:var(--ink);background:#f2f6f7;margin:0}
+main{max-width:1120px;margin:32px auto;background:white;padding:42px 50px;border-radius:16px}h1{font-size:34px;line-height:1.3}h2{margin-top:36px;font-size:23px;color:var(--teal)}
+p,li{max-width:980px}table{width:100%;border-collapse:collapse;margin:18px 0;font-size:14px}th,td{border-bottom:1px solid var(--line);padding:10px;text-align:left;vertical-align:top}th{background:var(--pale)}
+code{background:#edf2f4;padding:2px 5px;font-family:Consolas,monospace}
+.note{background:#fff3dc;border-left:5px solid #dd9b22;padding:15px 20px}.small{font-size:13px;color:var(--muted)}img{max-width:100%}.stats{display:flex;gap:16px;flex-wrap:wrap}.stat{background:var(--pale);padding:16px 24px;flex:1}.stat strong{display:block;font-size:28px;color:var(--teal)}
+.figs{display:grid;grid-template-columns:1fr 1fr;gap:18px}.figs figure{margin:0}.figs .wide{grid-column:1/-1}figcaption{font-size:13px;color:var(--muted)}
+@media(max-width:650px){main{margin:12px;padding:20px}h1{font-size:27px}.figs{grid-template-columns:1fr}.stat{min-width:130px;padding:12px}}
+@media print{body{background:white}main{margin:0;padding:12mm;max-width:none}figure,table,.note{break-inside:avoid}}</style><main>
+<p class="small">GROUP 20 · ETA PREDICTION · MEMBER B</p><h1>EDA &amp; feature engineering</h1>
+<p class="note"><strong>Local development results.</strong> Re-run on Rockhill and regenerate this page with <code>make_b_materials.py</code> before the poster is finalised.</p>
+<p class="small">Local development run on A's 100,000-trip sample. EDA uses the training period only (67,074 trips, before 2026-01-22).</p>
+<div class="stats"><div class="stat"><strong>13.1 min</strong>median trip (skew 2.66)</div><div class="stat"><strong>33 vs 5 min</strong>airport vs same-zone</div><div class="stat"><strong>31</strong>numeric features</div><div class="stat"><strong>−24%</strong>MAE, zone-pair lookup vs constant</div></div>
+<h2>What the data shows</h2><ul>
+<li><strong>Right-skewed target</strong>: median 13.1 min, mean 16.7 min, 95th percentile 42.2 min → we model <code>log1p(duration)</code>.</li>
+<li><strong>Location dominates</strong>: median 33.4 min to an airport, 32.6 min from an airport, 12.6 min for other trips and 4.6 min within the same zone.</li>
+<li><strong>Time adds a smaller shift</strong>: hour × weekday medians range from 10 to 18 min.</li></ul>
+<div class="figs"><figure class="wide"><img src="figures/B_duration_distribution.png" alt="Duration distribution"><figcaption>Duration (left) and log1p(duration) (right), training period.</figcaption></figure>
+<figure class="wide"><img src="figures/B_hour_weekday_heatmap.png" alt="Median duration by hour and weekday"><figcaption>Median duration by pickup hour and weekday.</figcaption></figure>
+<figure><img src="figures/B_trip_groups.png" alt="Median duration by trip group"><figcaption>Airport and same-zone trips (medians).</figcaption></figure>
+<figure><img src="figures/B_feature_signal.png" alt="Feature signal"><figcaption>Strongest features on validation (|Spearman|).</figcaption></figure></div>
+<h2>Features</h2><table><tr><th>Group</th><th>Features</th></tr>
+<tr><td>Calendar</td><td>hour, weekday, weekend, US holiday, day of month, cyclic sin/cos of time-of-day and weekday</td></tr>
+<tr><td>Our peak definition</td><td>night 00–06 · <strong>morning peak 06–10</strong> · midday 10–16 · <strong>afternoon peak 16–20</strong> · evening 20–24</td></tr>
+<tr><td>Zone flags</td><td>airport pickup/dropoff (EWR 1, JFK 132, LGA 138), same pickup and dropoff zone</td></tr>
+<tr><td>Target encodings</td><td>smoothed mean log-duration per pickup zone, dropoff zone, zone pair, zone pair × time band, pickup zone × hour, plus log counts (reliability)</td></tr>
+<tr><td>Passenger</td><td>count (train-median imputation) + missing indicator</td></tr></table>
+<h2>Leakage control</h2><ul><li>Only pickup-time inputs: <strong>no distance, fares, tips, payment type or dropoff time</strong>.</li>
+<li>All learned statistics are fitted on the <strong>training split only</strong>. Training rows get <strong>5-fold out-of-fold</strong> encodings, so no row sees its own label.</li>
+<li>Chronological splits: validation from 2026-01-22, test from 2026-01-27.</li></ul>
+<h2>Task parallelism &amp; determinism</h2><p>The 30 independent encoding tasks (5 folds × 5 tables, plus 5 for evaluation) run in a process pool. A fixed fold seed and order-preserving <code>map</code> make the output <strong>bit-identical to serial in every run</strong>. No speedup at this input size (0.64× at 2 workers): process start-up and data transfer outweigh the small amount of work. Measure speedup on the full Rockhill data.</p>
+<img src="figures/B_feature_speedup.png" alt="Speedup chart" style="max-width:520px">
+</main></html>

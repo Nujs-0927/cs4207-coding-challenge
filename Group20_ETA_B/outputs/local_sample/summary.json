@@ -1,0 +1,131 @@
+{
+  "data_source": "../Group20_ETA_A/outputs/local_jan2026/sample_100k.parquet",
+  "run": "local_sample",
+  "environment": {
+    "python": "3.13.18",
+    "platform": "Linux-6.18.44-fc-v880-x86_64-with-glibc2.39",
+    "cpus_visible": 2,
+    "slurm_cpus": null,
+    "pandas": "3.0.5",
+    "numpy": "2.5.3"
+  },
+  "rows": {
+    "all": 100000,
+    "train": 67074,
+    "validation": 14415,
+    "test": 18511
+  },
+  "split": {
+    "train": "2026-01-01 00:02:26 to 2026-01-21 23:59:43",
+    "validation_start": "2026-01-22",
+    "test_start": "2026-01-27"
+  },
+  "target_train": {
+    "count": 67074.0,
+    "mean": 16.67,
+    "std": 13.49,
+    "min": 1.0,
+    "25%": 8.1,
+    "50%": 13.08,
+    "75%": 20.63,
+    "95%": 42.22,
+    "max": 178.38,
+    "skew": 2.66
+  },
+  "hour_weekday_median_range": [
+    10.0,
+    17.8
+  ],
+  "median_by_band_train": {
+    "afternoon_peak": 12.95,
+    "evening": 12.83,
+    "midday": 13.35,
+    "morning_peak": 13.33,
+    "night": 12.7
+  },
+  "trip_groups_train": [
+    {
+      "group": "Same pickup & dropoff zone",
+      "median": 4.62,
+      "count": 2469
+    },
+    {
+      "group": "Other trips",
+      "median": 12.62,
+      "count": 59083
+    },
+    {
+      "group": "From airport",
+      "median": 32.62,
+      "count": 4538
+    },
+    {
+      "group": "To airport",
+      "median": 33.44,
+      "count": 984
+    }
+  ],
+  "n_features": 31,
+  "feature_columns": [
+    "hour",
+    "day_of_week",
+    "is_weekend",
+    "is_holiday",
+    "day_of_month",
+    "tod_sin",
+    "tod_cos",
+    "dow_sin",
+    "dow_cos",
+    "is_peak",
+    "pickup_airport",
+    "dropoff_airport",
+    "same_zone",
+    "passenger_count",
+    "passenger_count_missing",
+    "te_pickup",
+    "te_pickup_count",
+    "te_dropoff",
+    "te_dropoff_count",
+    "te_pair",
+    "te_pair_count",
+    "te_pair_band",
+    "te_pair_band_count",
+    "te_pickup_hour",
+    "te_pickup_hour_count",
+    "te_pair_blend",
+    "band_night",
+    "band_morning_peak",
+    "band_midday",
+    "band_afternoon_peak",
+    "band_evening"
+  ],
+  "validation_unseen_zone_pairs_pct": 6.9,
+  "validation_sanity": {
+    "MAE_constant_train_median": 8.04,
+    "MAE_zone_pair_lookup": 6.15,
+    "reduction_pct": 23.6
+  },
+  "benchmark": [
+    {
+      "workers": 1,
+      "mean": 0.2474,
+      "std": 0.006,
+      "speedup": 1.0,
+      "efficiency": 1.0,
+      "all_outputs_equal": true
+    },
+    {
+      "workers": 2,
+      "mean": 0.3844,
+      "std": 0.013,
+      "speedup": 0.6435,
+      "efficiency": 0.3217,
+      "all_outputs_equal": true
+    }
+  ],
+  "feature_fingerprints": {
+    "train": "9e8dcde5109fda4c",
+    "validation": "a144741447d9f9bd",
+    "test": "61afc24411bc9199"
+  }
+}
