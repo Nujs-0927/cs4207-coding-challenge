@@ -56,6 +56,11 @@ def main():
     best = max(bench, key=lambda b: b['speedup'])
     equal = all(b['all_outputs_equal'] for b in bench)
     lo, hi = s['hour_weekday_median_range']
+    am, li, nd = s['amdahl'], s['load_imbalance'], s['nondeterminism_folds']
+    nf_u, nf_s = len(set(nd['unseeded_fingerprints'])), len(set(nd['seeded_fingerprints']))
+    hd = s['nondeterminism_hash']
+    jfk_naive = ', '.join(str(r['naive: code of JFK (132)']) for r in hd)
+    jfk_fixed = hd[0]['fixed: code of JFK (132)']
     airport = max(grp['To airport'], grp['From airport'])
     scope = (f"Local development run on A's {r['all']:,}-trip sample" if local
              else f"Rockhill run on {r['all']:,} cleaned trips ({html.escape(Path(s['data_source']).name)})")
@@ -68,8 +73,8 @@ def main():
     else:
         par = (f"No speedup at this input size ({last['speedup']:.2f}× at {last['workers']} workers): process start-up "
                "and data transfer outweigh the small amount of work. Measure speedup on the full Rockhill data.")
-        par_say = ("Parallel and serial runs give identical output; on this small sample, "
-                   "process overhead outweighed the gain.")
+        par_say = ("Parallel and serial runs give identical output, but only about "
+                   f"{words(am['parallel_fraction_p'] * 100)} percent of the work is parallel, so Amdahl's law caps the speedup near one.")
 
     page = f"""<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Group 20 — B poster section</title><style>{CSS}</style><main>
 <p class="small">GROUP 20 · ETA PREDICTION · MEMBER B</p><h1>EDA &amp; feature engineering</h1>
@@ -93,23 +98,30 @@ def main():
 <h2>Leakage control</h2><ul><li>Only pickup-time inputs: <strong>no distance, fares, tips, payment type or dropoff time</strong>.</li>
 <li>All learned statistics are fitted on the <strong>training split only</strong>. Training rows get <strong>5-fold out-of-fold</strong> encodings, so no row sees its own label.</li>
 <li>Chronological splits: validation from {s['split']['validation_start']}, test from {s['split']['test_start']}.</li></ul>
-<h2>Task parallelism &amp; determinism</h2><p>The 30 independent encoding tasks (5 folds × 5 tables, plus 5 for evaluation) run in a process pool. A fixed fold seed and order-preserving <code>map</code> make the output <strong>{'bit-identical to serial in every run' if equal else 'NOT identical — investigate'}</strong>. {par}</p>
+<h2>Task parallelism: feature extraction</h2><p>The 30 encoding tasks (5 folds × 5 tables for training, plus 5 for evaluation) are independent: each reads only its own fold and writes only its own column block. They run in a process pool and are recombined in a fixed column order. Outputs are hashed for every worker count: <strong>{'identical to the serial run' if equal else 'NOT identical, investigate'}</strong>. {par}</p>
+<p><strong>Amdahl's law:</strong> only {am['parallel_fraction_p'] * 100:.1f}% of the 1-worker time is parallel (p = {am['parallel_fraction_p']}), so the speedup is capped at <strong>{am['max_speedup_infinite_workers']}×</strong> even with unlimited workers. The measured result falls below this bound because of process start-up and data transfer. Load imbalance: the slowest task takes {li['max_over_mean_task_time']}× as long as the average task.</p>
 <img src="figures/B_feature_speedup.png" alt="Speedup chart" style="max-width:520px">
+<h2>Non-determinism: found, shown, fixed</h2><table><tr><th>Source</th><th>Evidence (repeated runs)</th><th>Fix</th></tr>
+<tr><td>Unseeded random fold assignment for out-of-fold encoding</td><td>{nf_u} different outputs in 3 runs; one encoding changed by up to {nd['max_abs_diff_te_pair_unseeded']:.2f} log-minutes</td><td>Fixed fold seed → {nf_s} output in 3 runs</td></tr>
+<tr><td>Zone codes built from a Python <code>set</code> (hash order differs per process)</td><td>JFK (zone 132) got codes {jfk_naive} in 3 processes</td><td>Fixed sorted vocabulary → code {jfk_fixed} every time</td></tr></table>
+<p class="small">Prevented by design: results are collected in submission order (<code>pool.map</code>), never in completion order.</p>
 </main></html>"""
     (HERE / 'B_Poster_Section_EN.html').write_text(page, encoding='utf-8')
 
     speech = f"""Group 20 — Member B — Speaking script (EDA + Features), target 65–70 seconds
 Numbers from run: {a.run}
 
-Thanks. I'll cover what the data tells us and how we turned it into features.
+I'll cover the data and our features.
 
-First, trip duration is strongly right-skewed. The median is about {words(t['50%'])} minutes, but there is a long tail, so we model the log of duration.
+Trip duration is right-skewed, with a median of about {words(t['50%'])} minutes, so we model its log.
 
-Second, location matters far more than time. Airport trips take around {words(airport)} minutes, while trips within the same zone take about {words(grp['Same pickup & dropoff zone'])}. Time of day shifts the median by several minutes, as the heatmap shows.
+Location matters far more than time: airport trips take around {words(airport)} minutes, same-zone trips about {words(grp['Same pickup & dropoff zone'])}.
 
-From this, we built {words(s['n_features'])} features: calendar features, our own peak-hour bands, airport and same-zone flags, and smoothed target encodings for zones and zone pairs.
+We built {words(s['n_features'])} features: calendar features, our own peak-hour bands, airport flags and smoothed target encodings for zones and zone pairs.
 
 To avoid leakage, we fit the encodings on training data only, using out-of-fold values, and we never use distance, fares or dropoff time. {par_say}
+
+We also found two sources of non-determinism, unseeded folds and hash-ordered zone codes, and fixed both so every run is identical.
 
 Now C will explain our models.
 
@@ -121,6 +133,8 @@ Likely questions
 - Why log? Skew {t['skew']}; the log reduces the influence of very long trips.
 - Why is dropoff zone allowed? We assume the destination is given at pickup, as in a ride-hailing app.
 - Parallel correctness? Fixed fold seed + order-preserving map; hashes of serial and parallel outputs are identical.
+- What is p? The share of 1-worker run time that can run in parallel; Amdahl: S(n) = 1 / ((1 − p) + p/n).
+- Why hash order? Python randomises string hashing per process, so a set's order, and any codes built from it, change between processes.
 - Signal check: zone-pair lookup alone gives MAE {v['MAE_zone_pair_lookup']} vs {v['MAE_constant_train_median']} min for a constant baseline (not a model).
 """
     (HERE / 'B_Speaking_EN.txt').write_text(speech, encoding='utf-8')

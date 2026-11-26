@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from b_features import FeatureBuilder, fingerprint, load_cleaned, stateless_features, time_band  # noqa: E402
+from b_features import FeatureBuilder, fingerprint, load_cleaned, stateless_features, time_band, zone_codes  # noqa: E402
 
 
 def toy(n=400, seed=0):
@@ -77,6 +77,17 @@ class TestFeatures(unittest.TestCase):
             a, b = load_cleaned(d), load_cleaned(Path(d) / 's.parquet')
             self.assertEqual(len(a), 50); self.assertTrue(a['pickup_datetime'].is_monotonic_increasing)
             self.assertEqual(a['row_id'].tolist(), b['row_id'].tolist())
+
+    def test_zone_codes_fixed_vocabulary(self):
+        codes = zone_codes(pd.Series(['1', '132', '265', 'bogus']))
+        self.assertEqual(codes.tolist(), [0, 131, 264, 266])
+
+    def test_unseeded_folds_differ_seeded_match(self):
+        X, y = toy()
+        a = FeatureBuilder(seed=None).fit_transform(X, y); b = FeatureBuilder(seed=None).fit_transform(X, y)
+        c = FeatureBuilder(seed=1).fit_transform(X, y); d = FeatureBuilder(seed=1).fit_transform(X, y)
+        self.assertNotEqual(fingerprint(a), fingerprint(b))
+        self.assertEqual(fingerprint(c), fingerprint(d))
 
     def test_no_missing_and_numeric(self):
         X, y = toy()

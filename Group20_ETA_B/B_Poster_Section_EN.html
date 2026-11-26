@@ -10,7 +10,7 @@ code{background:#edf2f4;padding:2px 5px;font-family:Consolas,monospace}
 <p class="small">GROUP 20 · ETA PREDICTION · MEMBER B</p><h1>EDA &amp; feature engineering</h1>
 <p class="note"><strong>Local development results.</strong> Re-run on Rockhill and regenerate this page with <code>make_b_materials.py</code> before the poster is finalised.</p>
 <p class="small">Local development run on A's 100,000-trip sample. EDA uses the training period only (67,074 trips, before 2026-01-22).</p>
-<div class="stats"><div class="stat"><strong>13.1 min</strong>median trip (skew 2.66)</div><div class="stat"><strong>33 vs 5 min</strong>airport vs same-zone</div><div class="stat"><strong>31</strong>numeric features</div><div class="stat"><strong>−24%</strong>MAE, zone-pair lookup vs constant</div></div>
+<div class="stats"><div class="stat"><strong>13.1 min</strong>median trip (skew 2.66)</div><div class="stat"><strong>33 vs 5 min</strong>airport vs same-zone</div><div class="stat"><strong>33</strong>numeric features</div><div class="stat"><strong>−24%</strong>MAE, zone-pair lookup vs constant</div></div>
 <h2>What the data shows</h2><ul>
 <li><strong>Right-skewed target</strong>: median 13.1 min, mean 16.7 min, 95th percentile 42.2 min → we model <code>log1p(duration)</code>.</li>
 <li><strong>Location dominates</strong>: median 33.4 min to an airport, 32.6 min from an airport, 12.6 min for other trips and 4.6 min within the same zone.</li>
@@ -28,6 +28,11 @@ code{background:#edf2f4;padding:2px 5px;font-family:Consolas,monospace}
 <h2>Leakage control</h2><ul><li>Only pickup-time inputs: <strong>no distance, fares, tips, payment type or dropoff time</strong>.</li>
 <li>All learned statistics are fitted on the <strong>training split only</strong>. Training rows get <strong>5-fold out-of-fold</strong> encodings, so no row sees its own label.</li>
 <li>Chronological splits: validation from 2026-01-22, test from 2026-01-27.</li></ul>
-<h2>Task parallelism &amp; determinism</h2><p>The 30 independent encoding tasks (5 folds × 5 tables, plus 5 for evaluation) run in a process pool. A fixed fold seed and order-preserving <code>map</code> make the output <strong>bit-identical to serial in every run</strong>. No speedup at this input size (0.64× at 2 workers): process start-up and data transfer outweigh the small amount of work. Measure speedup on the full Rockhill data.</p>
+<h2>Task parallelism: feature extraction</h2><p>The 30 encoding tasks (5 folds × 5 tables for training, plus 5 for evaluation) are independent: each reads only its own fold and writes only its own column block. They run in a process pool and are recombined in a fixed column order. Outputs are hashed for every worker count: <strong>identical to the serial run</strong>. No speedup at this input size (0.63× at 2 workers): process start-up and data transfer outweigh the small amount of work. Measure speedup on the full Rockhill data.</p>
+<p><strong>Amdahl's law:</strong> only 5.5% of the 1-worker time is parallel (p = 0.055), so the speedup is capped at <strong>1.06×</strong> even with unlimited workers. The measured result falls below this bound because of process start-up and data transfer. Load imbalance: the slowest task takes 1.18× as long as the average task.</p>
 <img src="figures/B_feature_speedup.png" alt="Speedup chart" style="max-width:520px">
+<h2>Non-determinism: found, shown, fixed</h2><table><tr><th>Source</th><th>Evidence (repeated runs)</th><th>Fix</th></tr>
+<tr><td>Unseeded random fold assignment for out-of-fold encoding</td><td>3 different outputs in 3 runs; one encoding changed by up to 0.22 log-minutes</td><td>Fixed fold seed → 1 output in 3 runs</td></tr>
+<tr><td>Zone codes built from a Python <code>set</code> (hash order differs per process)</td><td>JFK (zone 132) got codes 157, 147, 82 in 3 processes</td><td>Fixed sorted vocabulary → code 131 every time</td></tr></table>
+<p class="small">Prevented by design: results are collected in submission order (<code>pool.map</code>), never in completion order.</p>
 </main></html>

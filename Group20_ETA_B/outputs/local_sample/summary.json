@@ -65,7 +65,7 @@
       "count": 984
     }
   ],
-  "n_features": 31,
+  "n_features": 33,
   "feature_columns": [
     "hour",
     "day_of_week",
@@ -77,7 +77,9 @@
     "dow_sin",
     "dow_cos",
     "is_peak",
+    "pickup_zone_code",
     "pickup_airport",
+    "dropoff_zone_code",
     "dropoff_airport",
     "same_zone",
     "passenger_count",
@@ -108,8 +110,8 @@
   "benchmark": [
     {
       "workers": 1,
-      "mean": 0.2474,
-      "std": 0.006,
+      "mean": 0.2427,
+      "std": 0.0032,
       "speedup": 1.0,
       "efficiency": 1.0,
       "all_outputs_equal": true
@@ -117,15 +119,93 @@
     {
       "workers": 2,
       "mean": 0.3844,
-      "std": 0.013,
-      "speedup": 0.6435,
-      "efficiency": 0.3217,
+      "std": 0.0075,
+      "speedup": 0.6314,
+      "efficiency": 0.3157,
       "all_outputs_equal": true
     }
   ],
+  "amdahl": {
+    "phase_seconds_1_worker": {
+      "serial_prepare": 0.1893,
+      "parallel_tasks": 0.0135,
+      "serial_assemble": 0.0423
+    },
+    "parallel_fraction_p": 0.055,
+    "max_speedup_infinite_workers": 1.06,
+    "table": [
+      {
+        "workers": 1,
+        "speedup": 1.0,
+        "amdahl_bound": 1.0,
+        "overhead_vs_bound_pct": 0.0
+      },
+      {
+        "workers": 2,
+        "speedup": 0.631,
+        "amdahl_bound": 1.028,
+        "overhead_vs_bound_pct": 62.846
+      }
+    ]
+  },
+  "load_imbalance": {
+    "max_over_mean_task_time": 1.18,
+    "per_table_ms": {
+      "mean_ms": {
+        "te_dropoff": 0.346,
+        "te_pair": 0.386,
+        "te_pair_band": 0.404,
+        "te_pickup": 0.356,
+        "te_pickup_hour": 0.369
+      },
+      "max_ms": {
+        "te_dropoff": 0.368,
+        "te_pair": 0.422,
+        "te_pair_band": 0.437,
+        "te_pickup": 0.422,
+        "te_pickup_hour": 0.415
+      }
+    }
+  },
+  "nondeterminism_folds": {
+    "unseeded_fingerprints": [
+      "927575c849c85e19",
+      "454cd9011efbb5cb",
+      "5bab6817d29793db"
+    ],
+    "seeded_fingerprints": [
+      "fddf67626a7ee693",
+      "fddf67626a7ee693",
+      "fddf67626a7ee693"
+    ],
+    "max_abs_diff_te_pair_unseeded": 0.2222
+  },
+  "nondeterminism_hash": [
+    {
+      "run": 1,
+      "naive: code of JFK (132)": 157,
+      "naive: hash of all codes": "be25c42f63c0",
+      "fixed: code of JFK (132)": 131,
+      "fixed: hash of all codes": "371c98dfa459"
+    },
+    {
+      "run": 2,
+      "naive: code of JFK (132)": 147,
+      "naive: hash of all codes": "888575c7e23d",
+      "fixed: code of JFK (132)": 131,
+      "fixed: hash of all codes": "371c98dfa459"
+    },
+    {
+      "run": 3,
+      "naive: code of JFK (132)": 82,
+      "naive: hash of all codes": "9d18519c3324",
+      "fixed: code of JFK (132)": 131,
+      "fixed: hash of all codes": "371c98dfa459"
+    }
+  ],
   "feature_fingerprints": {
-    "train": "9e8dcde5109fda4c",
-    "validation": "a144741447d9f9bd",
-    "test": "61afc24411bc9199"
+    "train": "fddf67626a7ee693",
+    "validation": "2832143664e41256",
+    "test": "099b261df46477bd"
   }
 }

@@ -5,8 +5,10 @@
 |---|---|
 | `B_EDA_Features.ipynb` | **Final Part B notebook** (self-contained, executed). C can merge it into the group notebook as-is. |
 | `b_features.py` | Data loader, feature builder, task-parallel encoding, benchmark |
-| `tests/test_b_features.py` | 8 tests: leakage guard, out-of-fold, unseen zones, parallel == serial, loader |
+| `tests/test_b_features.py` | 10 tests: leakage guard, out-of-fold, unseen zones, parallel == serial, loader, both non-determinism fixes |
 | `run_rockhill_b.sh` | Runs tests + notebook on Rockhill (`cs4207` partition), then regenerates the poster/speech |
+| `nondeterminism_hash_demo.py` | Helper the notebook runs in fresh processes to show hash-order non-determinism |
+| `make_pipeline_diagram.py` | Team pipeline diagram for the poster → `figures/Group20_pipeline.png` |
 | `make_b_materials.py` | Builds `B_Poster_Section_EN.html` + `B_Speaking_EN.txt` from a run's `summary.json` |
 | `outputs/<run>/features_{train,validation,test}.parquet` | Feature matrices for C/D |
 | `outputs/<run>/summary.json`, `figures/` | All numbers and figures used on the poster |
@@ -15,11 +17,11 @@
 ```python
 import pandas as pd, numpy as np
 tr = pd.read_parquet('outputs/local_sample/features_train.parquet')
-X_tr = tr.drop(columns=['duration_minutes', 'pickup_datetime'])   # 31 numeric features
+X_tr = tr.drop(columns=['duration_minutes', 'pickup_datetime'])   # 33 numeric features
 y_tr = np.log1p(tr['duration_minutes'])                            # predict with expm1(...)
 ```
 Tree models can use all features directly. For linear models, standardise with train statistics only.
-`*_count` columns tell the model how reliable an encoding is.
+`*_count` columns tell the model how reliable an encoding is. `pickup_zone_code` / `dropoff_zone_code` are category codes from a fixed vocabulary (stable across runs).
 
 ## Run on Rockhill (Lab PC)
 Put `Group20_ETA_A` and `Group20_ETA_B` side by side (GitHub clone), activate the group environment, then:

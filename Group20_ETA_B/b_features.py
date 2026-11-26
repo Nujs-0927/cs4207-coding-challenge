@@ -50,6 +50,24 @@ TIME_BANDS = [  # (name, start hour inclusive, end hour exclusive)
     ('evening', 20, 24),
 ]
 
+# Fixed, sorted category vocabulary for zone IDs (TLC zones 1-265 + unknowns).
+ZONE_VOCAB = [str(i) for i in range(1, 266)] + ['__MISSING__', '__OTHER__']
+
+
+def zone_codes(zones: pd.Series) -> np.ndarray:
+    """Category codes from the FIXED sorted vocabulary: identical in every run/process."""
+    idx = pd.Index(ZONE_VOCAB).get_indexer(zones.astype(str))
+    return np.where(idx < 0, ZONE_VOCAB.index('__OTHER__'), idx).astype('int16')
+
+
+def zone_codes_naive(zones: pd.Series) -> np.ndarray:
+    """NON-DETERMINISTIC version kept for the demonstration: vocabulary taken from a
+    Python set, whose iteration order depends on per-process string hashing
+    (PYTHONHASHSEED), so the same zone gets a different code in every process."""
+    vocab = {z: i for i, z in enumerate(set(zones.astype(str)))}
+    return zones.astype(str).map(vocab).to_numpy()
+
+
 ENCODED_KEYS = {  # learned table -> key columns
     'te_pickup': ['pickup_zone'],
     'te_dropoff': ['dropoff_zone'],
@@ -109,10 +127,12 @@ def stateless_features(X: pd.DataFrame) -> pd.DataFrame:
     f['time_band'] = time_band(hour)
     f['is_peak'] = f['time_band'].isin(['morning_peak', 'afternoon_peak']).astype('int8')
     f['pickup_zone'] = pu
+    f['pickup_zone_code'] = zone_codes(pu)
     f['pickup_airport'] = pu.isin(AIRPORT_ZONES).astype('int8')
     if 'dropoff_zone' in X.columns:
         do = X['dropoff_zone'].astype('string').fillna('__MISSING__')
         f['dropoff_zone'] = do
+        f['dropoff_zone_code'] = zone_codes(do)
         f['dropoff_airport'] = do.isin(AIRPORT_ZONES).astype('int8')
         f['same_zone'] = (pu == do).astype('int8')
     f['passenger_count'] = X['passenger_count'].astype('float64')
@@ -132,29 +152,37 @@ def _encode_task(args):
     """One independent task: fit one encoding table on the fitting rows and apply it.
     Inputs are integer key codes, so the task is cheap to send to a worker."""
     tag, fit_codes, fit_y, apply_codes, n_keys, m = args
+    t0 = time.perf_counter()
     prior = float(fit_y.mean())                               # from fitting rows only
     sums = np.bincount(fit_codes, weights=fit_y, minlength=n_keys)
     counts = np.bincount(fit_codes, minlength=n_keys).astype('float64')
     s, n = sums[apply_codes], counts[apply_codes]             # unseen key -> 0, 0
-    return tag, (s + m * prior) / (n + m), n
+    return tag, (s + m * prior) / (n + m), n, time.perf_counter() - t0
+
+
+TASK_LOG = []   # (tag, seconds) of the most recent run, for load-imbalance analysis
 
 
 def run_tasks(tasks, n_jobs):
     if n_jobs > 1:
         with ProcessPoolExecutor(max_workers=n_jobs) as pool:
-            return list(pool.map(_encode_task, tasks))        # map keeps task order
-    return [_encode_task(t) for t in tasks]
+            out = list(pool.map(_encode_task, tasks))         # map keeps task order
+    else:
+        out = [_encode_task(t) for t in tasks]
+    TASK_LOG[:] = [(tag, sec) for tag, _, _, sec in out]
+    return [(tag, e, n) for tag, e, n, _ in out]
 
 
 @dataclass
 class FeatureBuilder:
     smoothing: float = 20.0   # m: shrink rare keys toward the prior
     n_folds: int = 5          # out-of-fold folds for training rows
-    seed: int = 420720        # fixed -> deterministic fold assignment
+    seed: int | None = 420720  # fixed -> deterministic folds; None = unseeded (demo only)
     n_jobs: int = 1           # >1 -> encoding tasks run in a process pool
     fitted_: dict = field(default_factory=dict, repr=False)
 
     def fit_transform(self, X_train: pd.DataFrame, y_train: pd.Series) -> pd.DataFrame:
+        t0 = time.perf_counter()
         base = stateless_features(X_train)
         y_log = np.log1p(y_train.to_numpy(dtype='float64'))
         self.passenger_median_ = float(np.nanmedian(base['passenger_count']))
@@ -172,10 +200,16 @@ class FeatureBuilder:
             for name in self.names_:
                 tasks.append(((k, name), codes[name][fit], y_log[fit], codes[name][app],
                               len(self.vocab_[name]), self.smoothing))
+        t1 = time.perf_counter()
         enc = {tag: (e, n) for tag, e, n in run_tasks(tasks, self.n_jobs)}
+        t2 = time.perf_counter()
         masks = [folds == k for k in range(self.n_folds)]
         self.fitted_ = {'n_train': len(base)}
-        return self._assemble(base, enc, masks)
+        out = self._assemble(base, enc, masks)
+        self.phase_seconds_ = {'serial_prepare': t1 - t0, 'parallel_tasks': t2 - t1,
+                               'serial_assemble': time.perf_counter() - t2}
+        self.task_seconds_ = list(TASK_LOG)
+        return out
 
     def transform(self, X: pd.DataFrame) -> pd.DataFrame:
         if not self.fitted_:
