@@ -1,0 +1,12 @@
+Group 20 — Member A — English speaking draft (local-development wording)
+
+Hello, we are Group Twenty. Our project predicts taxi journey duration in minutes. We assume the intended destination is known at pickup.
+
+For local development, we used the complete January twenty twenty-six Yellow Taxi file from NYC TLC, containing about 3.72 million trips. We calculated duration from the pickup and dropoff timestamps, and read the data in batches to control memory use.
+
+Our cleaning rules remove out-of-month pickups, invalid durations and distances, non-positive fares, and implausible speeds. The fixed thresholds define our study population. We retained about 3.50 million trips, or 94.1 percent, while preserving common missing passenger and rate-code values.
+
+We provided a reproducible hundred-thousand-trip sample. Dropoff time, actual distance and fares are not model inputs. These local results must be verified on Rockhill. Next, our team will explain the features and models.
+
+Delivery notes: approximately 130–140 words. Rehearse with a timer and aim for 65–70 seconds to leave room for speaker transitions. Once the Rockhill run is complete, update the data scope and figures, then replace the local-development wording with an accurate account of the server run.
+Do not claim that the group's models, task-parallel implementations or final experiments are complete before they have actually been completed.

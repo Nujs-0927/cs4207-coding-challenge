@@ -1,0 +1,20 @@
+{
+  "status": "PASS",
+  "sample_rows": 100000,
+  "cleaned_rows": 3504372,
+  "cleaned_part_files": 38,
+  "time_split_sample_rows": {
+    "train": 67074,
+    "validation": 14415,
+    "test": 18511
+  },
+  "benchmark_configurations": [
+    1,
+    2,
+    4
+  ],
+  "repeats_per_configuration": 3,
+  "all_cleaning_fingerprints_equal": true,
+  "notebook_code_cells_executed_from_fresh_scope": 6,
+  "scope": "Local development verification, not Rockhill assessment evidence"
+}

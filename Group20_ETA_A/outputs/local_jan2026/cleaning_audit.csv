@@ -1,0 +1,12 @@
+step,rule,removed,remaining
+raw,Input rows,0,3724889
+missing_timestamps,Missing or invalid pickup/dropoff timestamp,0,3724889
+pickup_outside_file_month,Pickup outside the month in source filename,7,3724882
+non_positive_duration,Duration <= 0 minutes,45070,3679812
+duration_outside_scope,"Duration outside configured [min, max] minutes",40430,3639382
+missing_or_nonfinite_distance,Distance missing or non-finite,0,3639382
+non_positive_distance,Distance <= 0 miles,98392,3540990
+distance_above_limit,Distance exceeds configured maximum,156,3540834
+missing_or_nonfinite_fare,Fare missing or non-finite,0,3540834
+non_positive_fare,Fare <= 0 dollars,36213,3504621
+speed_above_limit,Observed average speed exceeds configured maximum,249,3504372

@@ -1,0 +1,11 @@
+{
+  "input_glob": "data/raw/yellow_tripdata_2026-01.parquet",
+  "batch_size": 100000,
+  "sample_size": 100000,
+  "sample_seed": 420720,
+  "min_duration_minutes": 1.0,
+  "max_duration_minutes": 180.0,
+  "max_distance_miles": 100.0,
+  "max_speed_mph": 100.0,
+  "prediction_setting": "At pickup, with intended destination zone assumed known; no realised distance or end-of-trip information in X."
+}

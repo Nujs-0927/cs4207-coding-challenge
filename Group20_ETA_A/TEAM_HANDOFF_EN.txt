@@ -1,0 +1,53 @@
+GROUP 20 — A DATA HANDOFF
+Status: real LOCAL development results; no Rockhill execution or website submission performed.
+Data: NYC TLC yellow_tripdata_2026-01.parquet only, not the whole server collection.
+Raw 3,724,889; retained 3,504,372; removed 220,517; development sample 100,000.
+
+FILES
+outputs/local_jan2026/sample_100k.parquet — recommended sample, preserves types.
+outputs/local_jan2026/sample_100k.csv — alternative interchange file.
+outputs/local_jan2026/cleaned_parts/ — full clean month (local full folder only, excluded from the lightweight team ZIP).
+outputs/local_jan2026/manifest.json — thresholds, source SHA256, data contract and provenance.
+outputs/local_jan2026/cleaning_audit.csv — first-failure, non-overlapping counts.
+A_Data_Module.ipynb — A's executed integration notebook, not the complete group notebook.
+handoff.py — safe column selection and explicit date-based split helpers.
+
+CONTRACT
+row_id: unique stable source-file + original row offset; metadata only.
+pickup_datetime: timestamp; use for chronology and calendar features.
+duration_minutes: regression target, NEVER in X.
+pickup_zone / dropoff_zone: category strings; dropoff assumes intended destination known.
+passenger_count: numeric, can be missing; zero is retained as an uncertain recorded value.
+passenger_count_missing: missing indicator. Fit any imputation on TRAIN ONLY.
+rate_code: explicit category, final-at-trip-end audit metadata, EXCLUDE from X.
+vendor_id: metadata, excluded by default.
+Missing zone/rate values use __MISSING__; invalid/unknown values use __UNKNOWN__.
+TLC codes 264/265 remain explicit special zone codes; do not assume they identify ordinary named zones.
+Recorded timestamps are treated as TLC's local wall-clock values; no unverified UTC conversion is applied.
+
+IMPORTANT
+Never build X with df.drop('duration_minutes') alone. Use inputs_and_target().
+Actual distance, speed, fare, tip, payment and dropoff time are deliberately absent from prediction data.
+Distance/fare/dropoff are used retrospectively for quality checks and labels: report selection limitations.
+Do not randomly split. Sort/split by pickup_datetime; full Parquet part order is NOT time order.
+The 100k sample covers the retained month and is NOT an independent test set.
+For a January-only integration example use validation >= Jan 22, test >= Jan 27; group C must approve final boundaries.
+No learned imputer, scaler or one-hot encoder is fitted by A.
+Do not remove duplicates merely because time/zone values match: there is no reliable trip ID.
+
+GROUP GAPS TO ASSIGN
+The proposed A/B/C/D plan has not explicitly assigned: two task-parallel patterns, two real nondeterminism/fix experiments, and fair speedup evidence for the chosen workloads.
+Two people training different models simultaneously is not by itself evidence of coded task parallelism.
+A's code covers data-parallel cleaning and deterministic aggregation only.
+D using Rockhill does not exempt other official experiments from the server requirement.
+Four talks of exactly 75 seconds leave zero transition margin; target 65–70 seconds each.
+
+ROCKHILL
+Use only your allocated Group 20 account. Do not share passwords in this package.
+Run python in the group's activated environment via cs4207 partition; do not request GPU numbers or use student partition.
+Run run_rockhill.sh after agreeing months and verifying four CPUs are available for the allocation.
+Replace LOCAL counts/plots/speech only with actually generated Rockhill evidence.
+
+DEADLINES (2026)
+Poster upload: end of Nov 26. Presentation: Nov 27, 14:00–16:00, maximum five minutes.
+Final notebook: Nov 29, 23:59. Actual upload destination should be checked; no upload has been made.
