@@ -2,16 +2,16 @@
   "run": "local_sample",
   "data_source": "sample_100k.parquet",
   "environment": {
-    "host": "local Windows laptop",
-    "cpu": "Intel64 Family 6 Model 183 Stepping 1, GenuineIntel",
-    "cores_total": 32,
-    "cores_usable": 8,
+    "host": "vm",
+    "cpu": "Intel(R) Xeon(R) Processor @ 2.10GHz",
+    "cores_total": 2,
+    "cores_usable": 2,
     "slurm_cpus": null,
-    "gpu": "NVIDIA GeForce RTX 4060 Laptop GPU (not used in Part C)",
-    "python": "3.12.10",
-    "platform": "Windows-11-10.0.26300-SP0",
-    "numpy": "2.5.5",
-    "pandas": "3.1.1",
+    "gpu": "none visible (not used in Part C)",
+    "python": "3.13.18",
+    "platform": "Linux-6.18.44-fc-v880-x86_64-with-glibc2.39",
+    "numpy": "2.5.3",
+    "pandas": "3.0.5",
     "scikit-learn": "1.9.1",
     "blas_threads": [
       1
@@ -22,8 +22,7 @@
     "repeats": 3,
     "workers": [
       1,
-      2,
-      4
+      2
     ],
     "shards": 8,
     "gd_iterations": 400,
@@ -45,22 +44,22 @@
       "split": "train",
       "rows": 67074,
       "targets_identical": true,
-      "cells_that_differ": 7598,
-      "largest_difference": 1.3322676295501878e-15
+      "cells_that_differ": 0,
+      "largest_difference": 0.0
     },
     {
       "split": "validation",
       "rows": 14415,
       "targets_identical": true,
-      "cells_that_differ": 1552,
-      "largest_difference": 8.881784197001252e-16
+      "cells_that_differ": 0,
+      "largest_difference": 0.0
     },
     {
       "split": "test",
       "rows": 18511,
       "targets_identical": true,
-      "cells_that_differ": 2166,
-      "largest_difference": 8.881784197001252e-16
+      "cells_that_differ": 0,
+      "largest_difference": 0.0
     }
   ],
   "split": [
@@ -109,9 +108,9 @@
   "search_benchmark": [
     {
       "workers": 1,
-      "mean_s": 0.3444,
-      "std_s": 0.004,
-      "compute_s": 0.3444,
+      "mean_s": 0.6028,
+      "std_s": 0.0287,
+      "compute_s": 0.6028,
       "startup_s": 0.0,
       "speedup": 1.0,
       "efficiency": 1.0,
@@ -120,54 +119,43 @@
     },
     {
       "workers": 2,
-      "mean_s": 0.3466,
-      "std_s": 0.0032,
-      "compute_s": 0.1848,
-      "startup_s": 0.1618,
-      "speedup": 0.9936,
-      "efficiency": 0.4968,
-      "speedup_no_startup": 1.8638,
-      "outputs_equal": true
-    },
-    {
-      "workers": 4,
-      "mean_s": 0.2805,
-      "std_s": 0.0036,
-      "compute_s": 0.104,
-      "startup_s": 0.1765,
-      "speedup": 1.2275,
-      "efficiency": 0.3069,
-      "speedup_no_startup": 3.3109,
+      "mean_s": 0.5028,
+      "std_s": 0.0428,
+      "compute_s": 0.3364,
+      "startup_s": 0.1664,
+      "speedup": 1.199,
+      "efficiency": 0.5995,
+      "speedup_no_startup": 1.7921,
       "outputs_equal": true
     }
   ],
-  "search_hash": "07a1a1803d66",
+  "search_hash": "83c443fe22a4",
   "best": {
     "trial": 14,
     "features": "interactions",
     "target": "log",
     "history_days": 21,
     "alpha": 1.0,
-    "MAE": 4.572571005970063,
-    "RMSE": 8.106299467774244,
-    "R2": 0.5796319272161825
+    "MAE": 4.572571005969755,
+    "RMSE": 8.106299467774672,
+    "R2": 0.5796319272161381
   },
   "n_configs": 126,
   "n_trials": 18,
   "alpha_spread_best_set": {
-    "best": 4.572571005970063,
-    "alpha0": 4.578245885306518,
+    "best": 4.572571005969755,
+    "alpha0": 4.578245885307641,
     "alpha_max": 5.3270055787490795
   },
   "imbalance": {
-    "shortest_trial_s": 0.003,
-    "longest_trial_s": 0.066,
-    "ratio": 19.7,
-    "sum_trials_s": 0.35,
-    "bound_by_longest_trial": 5.25,
-    "slowdown_of_a_trial_in_parallel": 1.15,
-    "compute_longest_first_s": 0.106,
-    "compute_listed_order_s": 0.129
+    "shortest_trial_s": 0.006,
+    "longest_trial_s": 0.104,
+    "ratio": 17.1,
+    "sum_trials_s": 0.57,
+    "bound_by_longest_trial": 5.54,
+    "slowdown_of_a_trial_in_parallel": 1.18,
+    "compute_longest_first_s": 0.315,
+    "compute_listed_order_s": 0.386
   },
   "chosen": {
     "Linear: calendar features only": {
@@ -177,8 +165,8 @@
       "history_days": 21,
       "alpha": 0.0,
       "MAE": 7.050732665142742,
-      "RMSE": 11.519114823452464,
-      "R2": 0.15116622630833643
+      "RMSE": 11.519114823452467,
+      "R2": 0.1511662263083362
     },
     "Linear: + zone encodings": {
       "trial": 8,
@@ -186,9 +174,9 @@
       "target": "log",
       "history_days": 21,
       "alpha": 0.0,
-      "MAE": 4.78215860821731,
-      "RMSE": 8.569176011249661,
-      "R2": 0.530254570701805
+      "MAE": 4.782158608217313,
+      "RMSE": 8.569176011249667,
+      "R2": 0.5302545707018047
     },
     "Ridge: + zone encodings": {
       "trial": 8,
@@ -196,9 +184,9 @@
       "target": "log",
       "history_days": 21,
       "alpha": 100.0,
-      "MAE": 4.781317683326189,
-      "RMSE": 8.568898290264803,
-      "R2": 0.5302850184482528
+      "MAE": 4.781317683326192,
+      "RMSE": 8.568898290264809,
+      "R2": 0.5302850184482524
     },
     "Tuned linear: + interactions": {
       "trial": 14,
@@ -206,34 +194,34 @@
       "target": "log",
       "history_days": 21,
       "alpha": 1.0,
-      "MAE": 4.572571005970063,
-      "RMSE": 8.106299467774244,
-      "R2": 0.5796319272161825
+      "MAE": 4.572571005969755,
+      "RMSE": 8.106299467774672,
+      "R2": 0.5796319272161381
     }
   },
   "sklearn_gap": {
-    "ridge": 2.1593837828959295e-14,
-    "ols": 6.2450045135165055e-15
+    "ridge": 5.620504062164855e-15,
+    "ols": 1.3239409568654992e-14
   },
   "gd_convergence": {
     "iterations": 400,
-    "max_weight_error": 1.701206940943334e-07,
-    "max_prediction_gap_min": 5.078821629922459e-06,
-    "validation_MAE": 4.781317678895606,
-    "closed_form_MAE": 4.781317683326191,
+    "max_weight_error": 1.701206972654079e-07,
+    "max_prediction_gap_min": 5.078821722293014e-06,
+    "validation_MAE": 4.781317678895607,
+    "closed_form_MAE": 4.781317683326192,
     "rows": 67074,
     "features": 28
   },
   "gd_benchmark": {
     "full": {
       "rows": 67074,
-      "hash": "524f6f6d8fdc",
+      "hash": "7300c7b7ad70",
       "table": [
         {
           "workers": 1,
-          "mean_s": 0.0655,
-          "std_s": 0.0014,
-          "compute_s": 0.0655,
+          "mean_s": 0.1386,
+          "std_s": 0.018,
+          "compute_s": 0.1386,
           "startup_s": 0.0,
           "speedup": 1.0,
           "efficiency": 1.0,
@@ -242,24 +230,13 @@
         },
         {
           "workers": 2,
-          "mean_s": 0.3298,
-          "std_s": 0.0088,
-          "compute_s": 0.1593,
-          "startup_s": 0.1705,
-          "speedup": 0.1986,
-          "efficiency": 0.0993,
-          "speedup_no_startup": 0.411,
-          "outputs_equal": true
-        },
-        {
-          "workers": 4,
-          "mean_s": 0.353,
-          "std_s": 0.0063,
-          "compute_s": 0.1585,
-          "startup_s": 0.1945,
-          "speedup": 0.1855,
-          "efficiency": 0.0464,
-          "speedup_no_startup": 0.4133,
+          "mean_s": 0.4922,
+          "std_s": 0.0369,
+          "compute_s": 0.3221,
+          "startup_s": 0.17,
+          "speedup": 0.2817,
+          "efficiency": 0.1408,
+          "speedup_no_startup": 0.4304,
           "outputs_equal": true
         }
       ]
@@ -268,32 +245,23 @@
   "overhead": [
     {
       "workers": 2,
-      "total_s": 0.3298,
-      "ideal_s": 0.0327,
-      "pool_startup_s": 0.1705,
-      "communication_s": 0.1226,
-      "other_s (memory bus, waiting)": 0.004,
-      "amdahl_p": -8.0718
-    },
-    {
-      "workers": 4,
-      "total_s": 0.353,
-      "ideal_s": 0.0164,
-      "pool_startup_s": 0.1945,
-      "communication_s": 0.1243,
-      "other_s (memory bus, waiting)": 0.0178,
-      "amdahl_p": -5.8538
+      "total_s": 0.4922,
+      "ideal_s": 0.0693,
+      "pool_startup_s": 0.17,
+      "communication_s": 0.144,
+      "other_s (memory bus, waiting)": 0.1088,
+      "amdahl_p": -5.1004
     }
   ],
   "amdahl": {
-    "p_gradient": -6.536,
-    "max_speedup_gradient": 0.1,
-    "p_search": 0.167,
-    "max_speedup_search": 1.2
+    "p_gradient": -5.1,
+    "max_speedup_gradient": 0.2,
+    "p_search": 0.332,
+    "max_speedup_search": 1.5
   },
   "shard_balance": {
-    "slowest_over_mean": 1.037,
-    "mean_ms": 0.06
+    "slowest_over_mean": 1.104,
+    "mean_ms": 0.1
   },
   "nondeterminism": [
     {
@@ -301,9 +269,9 @@
       "runs_before": 5,
       "distinct_before": 5,
       "fix": "add in shard order 0..7",
-      "runs_after": 5,
+      "runs_after": 4,
       "distinct_after": 1,
-      "what changed": "weights differ by up to 1.4e-15 (addition is not associative)"
+      "what changed": "weights differ by up to 3.5e-16 (addition is not associative)"
     },
     {
       "source": "Unseeded random search (ridge strength, row sample)",
@@ -312,7 +280,7 @@
       "fix": "seed = [SEED, trial id], not per worker",
       "runs_after": 3,
       "distinct_after": 1,
-      "what changed": "best alpha 1.38 / 0.598 / 0.359"
+      "what changed": "best alpha 0.186 / 17.2 / 0.803"
     },
     {
       "source": "Search results collected with as_completed",
@@ -327,21 +295,21 @@
   "limits": [
     {
       "shards": 4,
-      "fingerprint": "bb942d9656de",
-      "largest weight difference vs 8 shards": 1.3322676295501878e-15,
-      "largest prediction difference (min)": 1.9184653865522705e-13
+      "fingerprint": "d1b55728f45e",
+      "largest weight difference vs 8 shards": 3.3306690738754696e-16,
+      "largest prediction difference (min)": 4.973799150320701e-14
     },
     {
       "shards": 8,
-      "fingerprint": "24a47f3fc70c",
+      "fingerprint": "365fc41f4d9f",
       "largest weight difference vs 8 shards": 0.0,
       "largest prediction difference (min)": 0.0
     },
     {
       "shards": 16,
-      "fingerprint": "cbe95311f968",
-      "largest weight difference vs 8 shards": 1.3322676295501878e-15,
-      "largest prediction difference (min)": 1.5631940186722204e-13
+      "fingerprint": "42a46998ea5b",
+      "largest weight difference vs 8 shards": 1.3877787807814457e-16,
+      "largest prediction difference (min)": 4.973799150320701e-14
     }
   ],
   "daily_mae": {
@@ -464,5 +432,5 @@
     "validation": 14415,
     "test": 18511
   },
-  "runtime_s": 18.6
+  "runtime_s": 22.8
 }

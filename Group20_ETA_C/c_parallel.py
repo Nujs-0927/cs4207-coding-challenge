@@ -40,6 +40,8 @@ NOT_FOR_LINEAR = {
     'day_of_month': 'train covers days 1-21, so days 22-31 are pure extrapolation',
     'band_night': 'dummy trap: the five band columns always sum to 1',
     'is_peak': 'exactly band_morning_peak + band_afternoon_peak',
+    'pickup_zone_code': 'category ID, not a quantity: zone 132 is not "bigger" than zone 4',
+    'dropoff_zone_code': 'category ID, not a quantity: zone 132 is not "bigger" than zone 4',
 }
 INTERACT_WITH = ('tod_sin', 'tod_cos', 'is_weekend', 'is_holiday', 'pickup_airport', 'dropoff_airport',
                  'same_zone', 'band_morning_peak', 'band_midday', 'band_afternoon_peak', 'band_evening')
