@@ -1,0 +1,31 @@
+Group 20 — Member C — Speaking script (Methodology + Baselines), target 65–70 seconds
+Numbers from run: local_full, Group20_ETA_Final.ipynb (Part C)
+
+Thanks. I'll explain how we test fairly, and what our models must beat.
+
+We split by time, never at random: three weeks for training, five days to choose models, and the last five days for one final test. One shared function scores every model in minutes: MAE, RMSE and R squared.
+
+A constant guess is wrong by 8.2 minutes. Looking up the median for the same zone pair cuts that to 4.2, so that is our baseline. Our best linear model reaches 4.0. On the test days it rises to 6.4: trips took longer in the days after the January snowstorm.
+
+Two parts run in parallel. With four workers, 18 model trials run 2.9 times faster, and the sharded gradient 2.0 times faster, with bit-identical results.
+
+We also found three sources of non-determinism, and fixed them all.
+
+Now D will show our advanced models.
+
+---
+Likely questions
+- Why not a random split? The model would train on trips that happen after the ones it is tested on, so the score would be too good. The lecture says: train on earlier dates, test on later ones.
+- Why these dates? 21 training days are exactly three weeks, so each weekday appears three times. Validation and test have five days each.
+- Why is test worse than validation? Snowstorm on 25 January. On 27–30 January the mean trip is 21.1 minutes, above every training day (max 17.8). The bias is -4.6 minutes, and daily error returns to 4.3 on 31 January. We did not move the split after seeing this.
+- Why MAE first? It reads directly as "how many minutes off is the ETA". RMSE punishes large misses; R squared compares with predicting the mean.
+- Why log duration? Durations are right-skewed. On validation MAE the log target beats raw minutes for every feature set.
+- Why does ridge barely help? 2,348,057 rows against at most 115 inputs: little overfitting to remove. The search even chose alpha = 0 for the best model.
+- Why drop day_of_month? Train only covers days 1–21, so days 22–31 would be extrapolation. band_night and is_peak are exact combinations of other columns.
+- Why are the gradient shards independent? For fixed weights each row's gradient depends only on that row. We add sums and counts, then divide once.
+- Why is the gradient only 2.0× with 4 workers? Every iteration sends weights out and gradients back, start-up costs 0.19 s, and workers share one memory bus. Amdahl's law gives p = 0.69, so at most 3.2×. Shards are balanced (slowest / mean = 1.06).
+- Why does the search scale better? Trials never talk to each other. Its limit is the longest trial: total ÷ longest = 5.7×.
+- How do you know parallel equals sequential? SHA-256 fingerprints of the raw bytes match for 1, 2 and 4 workers and every repeat. The gradient also matches the closed form, and that matches scikit-learn.
+- Why do results differ in completion order? Floating-point addition is not associative, so a different order changes the last digits: weights differ by up to 7.5e-16.
+- Why one BLAS thread? Otherwise "one worker" would already use several cores and the speedup would be meaningless.
+- Limits of the fixes? Identical on the same machine, library versions and shard count. Other shard counts move weights by up to 5×10⁻¹⁶.
