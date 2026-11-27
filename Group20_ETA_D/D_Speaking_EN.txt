@@ -1,0 +1,27 @@
+Group 20 — Member D — Speaking script (Results + Conclusion), target 65–70 seconds
+Numbers from run: local_sample (D_Advanced_Models.ipynb) — LOCAL SAMPLE: update after the Rockhill run
+
+Our advanced models are Random Forest, LightGBM and XGBoost, trained on B's features and scored with C's shared evaluation.
+
+LightGBM is our best model. On validation it is off by three point nine minutes on average, 15 percent better than the best linear model, because trees learn how zones and time interact.
+
+Location drives the prediction: about 91 percent of the model's gain comes from zone features.
+
+On the test days the error rises to six point four minutes. After the January snowstorm, trips took longer than anything in training, and long trips are under-predicted.
+
+We also found that the Random Forest's parallel prediction changed in the last digits between runs; a fixed summation order made it identical.
+
+Next, we would add weather data and more months. Thank you.
+
+---
+Likely questions
+- Why log duration? Durations are right-skewed; on the log scale one 60-minute trip does not dominate the loss. Predictions are converted back with expm1 and clipped to A's 1–180 minute range.
+- Why not distance? The recorded distance is only known after the trip: leakage. All inputs are known at pickup.
+- How did you tune? Small grids per model, fitted on train and chosen by validation MAE; LightGBM/XGBoost stop early on validation loss. Test was scored once, for the chosen configuration.
+- Why drop day_of_month? Training covers days 1–21, test 27–31; a tree would treat every test day as day 21.
+- Why is test worse than validation? Snowstorm on 25 January: test bias -4.8 min, daily MAE up to 7.3 min on 2026-01-28; it falls back to 4.2 on 2026-01-31. Every model, including the baselines, shows the same drop.
+- Why are long trips under-predicted? Few long trips per zone pair, no traffic or weather input, and a log-scale loss pulls predictions toward the typical trip.
+- Random Forest non-determinism? scikit-learn adds the 300 tree predictions from several threads as each finishes. Floating-point addition is not associative, so the last digits change (1e-13 min). One prediction thread fixes the order; training stays parallel and seeded.
+- Is the result reproducible? Fixed seed 420720: identical fingerprints for refits and for 1 vs 2 threads, for all three models.
+- Why LightGBM over XGBoost? Validation MAE 3.89 vs 3.93; chosen on validation only.
+- Feature importance metric? Share of total split gain; zone-pair encoding alone ≈ 53%.

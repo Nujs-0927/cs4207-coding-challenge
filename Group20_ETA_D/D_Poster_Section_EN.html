@@ -1,0 +1,33 @@
+<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Group 20 — D poster section</title><style>:root{--ink:#142a36;--teal:#087f78;--muted:#536670;--pale:#eaf4f2;--line:#d5e1e5}
+*{box-sizing:border-box}body{font:16px/1.75 'Segoe UI','Microsoft YaHei',sans-serif;color:var(--ink);background:#f2f6f7;margin:0}
+main{max-width:1120px;margin:32px auto;background:white;padding:42px 50px;border-radius:16px}h1{font-size:34px;line-height:1.3}h2{margin-top:36px;font-size:23px;color:var(--teal)}
+p,li{max-width:980px}table{width:100%;border-collapse:collapse;margin:18px 0;font-size:14px}th,td{border-bottom:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top}th{background:var(--pale)}td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}tr.d td{font-weight:600}
+code{background:#edf2f4;padding:2px 5px;font-family:Consolas,monospace}
+.note{background:#fff3dc;border-left:5px solid #dd9b22;padding:15px 20px}.small{font-size:13px;color:var(--muted)}img{max-width:100%}.stats{display:flex;gap:16px;flex-wrap:wrap}.stat{background:var(--pale);padding:16px 24px;flex:1}.stat strong{display:block;font-size:28px;color:var(--teal)}
+.figs{display:grid;grid-template-columns:1fr 1fr;gap:18px}.figs figure{margin:0}.figs .wide{grid-column:1/-1}figcaption{font-size:13px;color:var(--muted)}
+@media(max-width:650px){main{margin:12px;padding:20px}h1{font-size:27px}.figs{grid-template-columns:1fr}.stat{min-width:130px;padding:12px}table{display:block;overflow-x:auto}}
+@media print{body{background:white}main{margin:0;padding:12mm;max-width:none}figure,table,.note{break-inside:avoid}}</style><main>
+<p class="small">GROUP 20 · ETA PREDICTION · MEMBER D</p><h1>Results &amp; conclusion</h1>
+<p class="note"><strong>Local development results.</strong> Re-run on Rockhill with the full-month features from B and C's full-month scoreboard, then regenerate this page with <code>make_d_materials.py</code>.</p><p class="small">Local development run on A's 100,000-trip sample (train 67,074 · validation 14,415 · test 18,511); 2 threads, Linux. All numbers from <code>D_Advanced_Models.ipynb</code>, scored with C's shared <code>evaluate()</code>.</p>
+<div class="stats"><div class="stat"><strong>3.89 min</strong>validation MAE, LightGBM</div><div class="stat"><strong>−15%</strong>MAE vs best linear model</div><div class="stat"><strong>6.39 min</strong>test MAE (after the snowstorm)</div><div class="stat"><strong>91%</strong>of split gain from location</div></div>
+<h2>Best model and comparison</h2>
+<p>Random Forest, LightGBM and XGBoost on B's 32 pickup-time features, trained on <code>log1p(duration)</code>.
+Each has a small grid tuned on <strong>validation</strong> (boosters early-stop on validation loss); test is scored once.
+<strong>LightGBM</strong> (num_leaves = 127, min_child_samples = 100) wins on validation.</p>
+<table><tr><th>Model</th><th class="n">Val MAE</th><th class="n">Val R²</th><th class="n">Test MAE</th><th class="n">Test R²</th><th class="n">Test bias</th></tr><tr class=""><td>Constant (train median)</td><td class="n">8.04</td><td class="n">-0.05</td><td class="n">10.50</td><td class="n">-0.20</td><td class="n">-6.83</td></tr><tr class=""><td>Zone-pair median</td><td class="n">4.91</td><td class="n">0.49</td><td class="n">7.76</td><td class="n">0.29</td><td class="n">-5.51</td></tr><tr class=""><td>Tuned linear: + interactions</td><td class="n">4.57</td><td class="n">0.58</td><td class="n">7.05</td><td class="n">0.43</td><td class="n">-4.78</td></tr><tr class="d"><td>Random Forest</td><td class="n">4.13</td><td class="n">0.67</td><td class="n">6.77</td><td class="n">0.48</td><td class="n">-5.04</td></tr><tr class="d"><td>XGBoost</td><td class="n">3.93</td><td class="n">0.71</td><td class="n">6.45</td><td class="n">0.53</td><td class="n">-4.80</td></tr><tr class="d"><td>LightGBM ★</td><td class="n">3.89</td><td class="n">0.72</td><td class="n">6.39</td><td class="n">0.54</td><td class="n">-4.75</td></tr></table>
+<figure><img src="figures/D_model_comparison.png" alt="Validation and test MAE for every model"><figcaption>MAE of all group models on the same split (C's baselines and linear models, D's tree models in bold).</figcaption></figure>
+<ul><li>Trees beat the best linear model by <strong>14.9%</strong> (validation) and <strong>9.4%</strong> (test): they learn zone × time interactions that the linear model needs hand-made products for.</li>
+<li>Against the zone-pair median baseline: <strong>20.8%</strong> lower validation MAE.</li></ul>
+<h2>What drives the prediction, and where it fails</h2>
+<div class="figs"><figure><img src="figures/D_feature_importance.png" alt="Feature importance"><figcaption>LightGBM: 91% of the gain comes from zone encodings, zone categories and airport/same-zone flags.</figcaption></figure>
+<figure><img src="figures/D_pred_vs_actual.png" alt="Predicted against actual duration"><figcaption>Test set: long trips are under-predicted (trips over 40 min: MAE 22.4, bias -21.7 min).</figcaption></figure></div>
+<h2>Limitations</h2><ul>
+<li><strong>Distribution shift:</strong> after the 25 Jan snowstorm, daily test MAE reaches 7.3 min (2026-01-28) versus 3.3–4.4 on validation days; test bias -4.8 min. Split dates were fixed before seeing this.</li>
+<li><strong>No live traffic or weather</strong> input, and the recorded dropoff zone stands in for the intended destination.</li>
+<li><strong>Restricted population:</strong> A's 1–180 min, ≤100 mile, ≤100 mph filters; January only.</li></ul>
+<h2>Reproducibility</h2>
+<p><strong>Non-determinism found in Part D:</strong> the Random Forest's parallel <code>predict()</code> adds the tree outputs in whatever order threads finish — 4 different outputs in 4 calls (up to 1e-13 min). Fix: one prediction thread (fixed summation order) → 1 of 4.
+With fixed seeds, all three models give identical test predictions across refits and thread counts.</p>
+<h2>Conclusion &amp; future work</h2>
+<p>Where a trip goes matters far more than when it starts. Gradient-boosted trees on leakage-free pickup-time features give the best ETA (3.89 min validation MAE).
+Next: add weather and incident data to handle events like the storm, train on more months, and retrain regularly with the same time-ordered evaluation.</p></main></html>
